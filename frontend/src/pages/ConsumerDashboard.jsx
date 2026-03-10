@@ -79,7 +79,7 @@ function ConsumerDashboard() {
         setShowSystemModal(false);
         // Redirect to Python Flask system with consumer_id as URL parameter
         const consumerId = consumerSession.consumerId;
-        window.location.href = `http://172.17.58.79:5000?consumer_id=${consumerId}`;
+        window.location.href = `http://192.168.199.200:5000?consumer_id=${consumerId}`;
     };
 
     const handleValidateToken = async (token) => {

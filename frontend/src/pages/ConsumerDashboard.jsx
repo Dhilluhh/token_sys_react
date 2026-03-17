@@ -79,7 +79,7 @@ function ConsumerDashboard() {
         setShowSystemModal(false);
         // Redirect to Python Flask system with consumer_id as URL parameter
         const consumerId = consumerSession.consumerId;
-        window.location.href = `http://172.17.58.79:5000?consumer_id=${consumerId}`;
+        window.location.href = `http://10.178.83.79:5000?consumer_id=${consumerId}`;
     };
 
     const handleValidateToken = async (token) => {
@@ -348,6 +348,16 @@ function ConsumerDashboard() {
                                 <div className="system-icon">🐍</div>
                                 <h3>Python (Flask)</h3>
                                 <p>Alternative Flask-based token generation</p>
+                            </button>
+
+                            <button
+                                className="system-option-btn"
+                                onClick={() => { setShowSystemModal(false); navigate('/dashboard/actual-integration'); }}
+                                style={{ gridColumn: '1 / -1', marginTop: '1rem' }}
+                            >
+                                <div className="system-icon">🚀</div>
+                                <h3>Actual Integration</h3>
+                                <p>Configure tokens based on the programming language chosen</p>
                             </button>
                         </div>
 

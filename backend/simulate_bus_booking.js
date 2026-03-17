@@ -8,7 +8,7 @@ const data = JSON.stringify({
         charset: "NUMBER",
         complexity: "M", // Length 6
         purpose: "OTP",
-        phone_number: "+19876543210" // Simulates where the SMS should go
+        phone_number: "9874382619" // Simulates where the SMS should go
     }
 });
 

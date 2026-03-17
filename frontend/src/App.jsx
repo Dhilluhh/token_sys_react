@@ -6,6 +6,7 @@ import UserRegister from './pages/UserRegister';
 import AdminLogin from './pages/AdminLogin';
 import ConsumerDashboard from './pages/ConsumerDashboard';
 import IntegrationTestBed from './pages/IntegrationTestBed';
+import ActualIntegration from './pages/ActualIntegration';
 import AdminDashboard from './pages/AdminDashboard';
 import './App.css';
 
@@ -19,6 +20,7 @@ function App() {
                 <Route path="/login/admin" element={<AdminLogin />} />
                 <Route path="/dashboard/consumer" element={<ConsumerDashboard />} />
                 <Route path="/dashboard/integration-test" element={<IntegrationTestBed />} />
+                <Route path="/dashboard/actual-integration" element={<ActualIntegration />} />
                 <Route path="/dashboard/admin" element={<AdminDashboard />} />
                 {/* Fallback route */}
                 <Route path="*" element={<Navigate to="/" replace />} />

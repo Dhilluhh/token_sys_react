@@ -45,6 +45,7 @@ function AdminDashboard() {
         totalAlgorithms: 0,
         totalTokens: 0
     });
+    const [expandedConsumerId, setExpandedConsumerId] = useState(null);
 
     // State for create admin form
     const [showCreateAdminForm, setShowCreateAdminForm] = useState(false);
@@ -97,15 +98,7 @@ function AdminDashboard() {
             const activeConsumers = consumersData.consumers.filter(c => c.status === 'active').length;
 
             // Get total tokens from all consumers
-            let totalTokens = 0;
-            for (const consumer of consumersData.consumers) {
-                try {
-                    const tokensData = await getConsumerTokens(consumer.Consumer_ID);
-                    totalTokens += tokensData.tokens?.length || 0;
-                } catch (err) {
-                    console.error(`Error fetching tokens for consumer ${consumer.Consumer_ID}:`, err);
-                }
-            }
+            const totalTokens = consumersData.consumers.reduce((sum, current) => sum + parseInt(current.total_tokens || 0), 0);
 
             setSystemStats({
                 totalConsumers: consumersData.consumers.length,
@@ -147,6 +140,14 @@ function AdminDashboard() {
         } catch (err) {
             console.error('Error updating consumer status:', err);
             setError('Failed to update consumer status. Please try again.');
+        }
+    };
+
+    const toggleConsumerExpand = (consumerId) => {
+        if (expandedConsumerId === consumerId) {
+            setExpandedConsumerId(null);
+        } else {
+            setExpandedConsumerId(consumerId);
         }
     };
 
@@ -235,36 +236,58 @@ function AdminDashboard() {
                             <tr>
                                 <th>ID</th>
                                 <th>Name</th>
-                                <th>Contact</th>
                                 <th>Status</th>
-                                <th>Registered At</th>
                                 <th>Actions</th>
                             </tr>
                         </thead>
                         <tbody>
                             {consumers.map(consumer => (
-                                <tr key={consumer.Consumer_ID}>
-                                    <td>{consumer.Consumer_ID}</td>
-                                    <td>{consumer.Consumer_Name}</td>
-                                    <td>{consumer.Contact}</td>
-                                    <td>
-                                        <span className={`status-badge status-${consumer.status}`}>
-                                            {consumer.status}
-                                        </span>
-                                    </td>
-                                    <td>{new Date(consumer.registered_at).toLocaleDateString()}</td>
-                                    <td>
-                                        <select
-                                            value={consumer.status}
-                                            onChange={(e) => handleStatusChange(consumer.Consumer_ID, e.target.value)}
-                                            className="status-select"
-                                        >
-                                            <option value="active">Active</option>
-                                            <option value="inactive">Inactive</option>
-                                            <option value="suspended">Suspended</option>
-                                        </select>
-                                    </td>
-                                </tr>
+                                <React.Fragment key={consumer.Consumer_ID}>
+                                    <tr
+                                        onClick={() => toggleConsumerExpand(consumer.Consumer_ID)}
+                                        style={{ cursor: 'pointer', backgroundColor: expandedConsumerId === consumer.Consumer_ID ? 'rgba(0,0,0,0.05)' : '' }}
+                                    >
+                                        <td>{consumer.Consumer_ID}</td>
+                                        <td>{consumer.Consumer_Name}</td>
+                                        <td>
+                                            <span className={`status-badge status-${consumer.status}`}>
+                                                {consumer.status}
+                                            </span>
+                                        </td>
+                                        <td onClick={(e) => e.stopPropagation()}>
+                                            <select
+                                                value={consumer.status}
+                                                onChange={(e) => handleStatusChange(consumer.Consumer_ID, e.target.value)}
+                                                className="status-select"
+                                            >
+                                                <option value="active">Active</option>
+                                                <option value="inactive">Inactive</option>
+                                                <option value="suspended">Suspended</option>
+                                            </select>
+                                        </td>
+                                    </tr>
+                                    {expandedConsumerId === consumer.Consumer_ID && (
+                                        <tr>
+                                            <td colSpan="4" style={{ padding: '0' }}>
+                                                <div style={{ padding: '15px 20px', backgroundColor: 'rgba(0,0,0,0.02)', borderBottom: '1px solid var(--border-color, #eee)', borderLeft: '3px solid var(--primary-color, #4CAF50)' }}>
+                                                    <h4 style={{ margin: '0 0 10px 0', color: 'var(--text-color, #333)' }}>Consumer Details</h4>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '15px' }}>
+                                                        <div>
+                                                            <p style={{ margin: '5px 0' }}><strong>Contact Email:</strong> {consumer.Contact}</p>
+                                                            <p style={{ margin: '5px 0' }}><strong>Registration Date:</strong> {new Date(consumer.registered_at).toLocaleDateString()}</p>
+                                                        </div>
+                                                        <div>
+                                                            <p style={{ margin: '5px 0' }}><strong>Tokens Generated:</strong> {consumer.total_tokens || 0}</p>
+                                                            <p style={{ margin: '5px 0' }}>
+                                                                <strong>Last Active:</strong> {consumer.last_active ? new Date(consumer.last_active).toLocaleString() : 'Never'}
+                                                            </p>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    )}
+                                </React.Fragment>
                             ))}
                         </tbody>
                     </table>

@@ -84,7 +84,23 @@ async function updateConsumerStatus(consumerId, status) {
 // Get all consumers (admin function)
 async function getAllConsumers() {
     const [rows] = await pool.query(
-        'SELECT Consumer_ID, Consumer_Name, Contact, status, registered_at FROM Consumer_Registry ORDER BY registered_at DESC'
+        `SELECT 
+            c.Consumer_ID, 
+            c.Consumer_Name, 
+            c.Contact, 
+            c.status, 
+            c.registered_at,
+            COUNT(t.Token_ID) as total_tokens,
+            MAX(t.Issued_at) as last_active
+        FROM Consumer_Registry c
+        LEFT JOIN Tokens t ON c.Consumer_ID = t.Consumer_ID
+        GROUP BY 
+            c.Consumer_ID, 
+            c.Consumer_Name, 
+            c.Contact, 
+            c.status, 
+            c.registered_at
+        ORDER BY c.registered_at DESC`
     );
     return rows;
 }

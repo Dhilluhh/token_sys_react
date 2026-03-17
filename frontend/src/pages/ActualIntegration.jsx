@@ -3,22 +3,24 @@ import { useNavigate } from 'react-router-dom';
 import ThemeToggle from '../components/ThemeToggle';
 import { generateToken } from '../api';
 
-function IntegrationTestBed() {
+function ActualIntegration() {
     const navigate = useNavigate();
     const [consumerSession, setConsumerSession] = useState(null);
     const [currentToken, setCurrentToken] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
 
+    const [selectedLanguage, setSelectedLanguage] = useState('javascript');
+
     const [formData, setFormData] = useState({
-        algorithm: 'python_random', // Default to the Python wrapper we just made
+        algorithm: 'random',
         user_id: 'passenger_001',
         purpose: 'OTP',
         validity_value: 30,
         validity_unit: 'minutes',
         charset: 'NUMBER',
         complexity: 'M',
-        phone_number: '9856170405' // Needed for SMS payload
+        phone_number: '9874382619' // Needed for SMS payload
     });
 
     useEffect(() => {
@@ -29,6 +31,69 @@ function IntegrationTestBed() {
         }
         setConsumerSession(JSON.parse(session));
     }, [navigate]);
+
+    const handleLanguageChange = (e) => {
+        const value = e.target.value;
+        setSelectedLanguage(value);
+        setFormData(prev => {
+            const newData = { ...prev };
+            // Auto map current algorithm to its equivalent in the new selected language
+            if (value === 'python') {
+                if (!newData.algorithm.startsWith('python_')) {
+                    if (newData.algorithm === 'hashv2') newData.algorithm = 'python_hashing_v2';
+                    else newData.algorithm = `python_${newData.algorithm}`;
+                }
+            } else {
+                if (newData.algorithm.startsWith('python_')) {
+                    newData.algorithm = newData.algorithm.replace('python_', '');
+                    if (newData.algorithm === 'hashing_v2') newData.algorithm = 'hashv2';
+                }
+            }
+            return newData;
+        });
+    };
+
+    const handlePurposeChange = (e) => {
+        const purpose = e.target.value;
+        setFormData(prev => {
+            const newData = { ...prev, purpose };
+
+            // Pre-fixed mappings based on purpose
+            switch (purpose) {
+                case 'OTP':
+                    newData.algorithm = selectedLanguage === 'python' ? 'python_random' : 'random';
+                    newData.validity_value = 15;
+                    newData.validity_unit = 'minutes';
+                    break;
+                case 'AUTHENTICATION':
+                    newData.algorithm = selectedLanguage === 'python' ? 'python_hashing_v2' : 'hashv2';
+                    newData.validity_value = 60;
+                    newData.validity_unit = 'minutes';
+                    break;
+                case 'REGISTRATION':
+                    newData.algorithm = selectedLanguage === 'python' ? 'python_sequential' : 'sequential';
+                    newData.validity_value = 30;
+                    newData.validity_unit = 'minutes';
+                    break;
+                case 'VERIFICATION':
+                    newData.algorithm = selectedLanguage === 'python' ? 'python_modulo' : 'modulo';
+                    newData.validity_value = 10;
+                    newData.validity_unit = 'minutes';
+                    break;
+                case 'PAYMENT GATEWAY':
+                    newData.algorithm = selectedLanguage === 'python' ? 'python_hashing' : 'hashing';
+                    newData.validity_value = 15;
+                    newData.validity_unit = 'minutes';
+                    break;
+                case 'COMPLAINT':
+                    newData.algorithm = selectedLanguage === 'python' ? 'python_sequential' : 'sequential';
+                    newData.validity_value = 7;
+                    newData.validity_unit = 'days';
+                    break;
+            }
+            return newData;
+        });
+    };
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -97,8 +162,8 @@ function IntegrationTestBed() {
             <header className="app-header">
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', maxWidth: '1200px' }}>
                     <div>
-                        <h1>API Integration TestBed</h1>
-                        <p>Simulate requests and configure payload constraints before integrating.</p>
+                        <h1>Actual Integration</h1>
+                        <p>Configure and generate actual integration payloads directly.</p>
                     </div>
                     <div style={{ textAlign: 'right' }}>
                         <p style={{ margin: '0 0 0.5rem 0', fontSize: '0.9rem', color: 'var(--text-muted)' }}>
@@ -107,6 +172,7 @@ function IntegrationTestBed() {
                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                             <button
                                 onClick={() => navigate('/dashboard/consumer')}
+                                className="btn-action"
                                 style={{
                                     padding: '0.4rem 1rem',
                                     fontSize: '0.85rem',
@@ -121,6 +187,7 @@ function IntegrationTestBed() {
                             </button>
                             <button
                                 onClick={handleLogout}
+                                className="btn-action"
                                 style={{
                                     padding: '0.4rem 1rem',
                                     fontSize: '0.85rem',
@@ -142,44 +209,85 @@ function IntegrationTestBed() {
 
                 {/* Left Side: Payload Configuration Form */}
                 <div style={{ flex: '1', background: 'var(--surface-color)', padding: '2rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)' }}>
-                    <h2>Configure Request Payload</h2>
-                    <p style={{ color: 'var(--text-muted)', marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                        Set default parameters for your tokens. The simulator will auto-inject the current timestamp into the generated request.
-                    </p>
+                    <h2>Integration Payload Setup</h2>
 
-                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                    <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem', marginTop: '1.5rem' }}>
 
                         <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Programming Language</label>
+                                <select
+                                    name="language"
+                                    value={selectedLanguage}
+                                    onChange={handleLanguageChange}
+                                    style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                                >
+                                    <option value="javascript">JavaScript</option>
+                                    <option value="python">Python</option>
+                                </select>
+                            </div>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Target Algorithm</label>
-                                <select name="algorithm" value={formData.algorithm} onChange={handleChange} style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
-                                    <option value="python_random">OTP (Python Module)</option>
-                                    <option value="random">Random (Node)</option>
-                                    <option value="sequential">Sequential</option>
+                                <select
+                                    name="algorithm"
+                                    value={formData.algorithm}
+                                    onChange={handleChange}
+                                    style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}
+                                >
+                                    {selectedLanguage === 'python' ? (
+                                        <>
+                                            <option value="python_compression">Compression </option>
+                                            <option value="python_folding">Folding </option>
+                                            <option value="python_hashing">Hashing </option>
+                                            <option value="python_hashing_v2">Hashing v2 </option>
+                                            <option value="python_heap">Heap </option>
+                                            <option value="python_modulo">Modulo </option>
+                                            <option value="python_random">Random </option>
+                                            <option value="python_reverse">Reverse </option>
+                                            <option value="python_sequential">Sequential </option>
+                                            <option value="python_unified">Unified </option>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <option value="compression">Compression </option>
+                                            <option value="folding">Folding </option>
+                                            <option value="hashing">Hashing </option>
+                                            <option value="hashv2">Hashing v2 </option>
+                                            <option value="heap">Heap </option>
+                                            <option value="modulo">Modulo </option>
+                                            <option value="random">Random </option>
+                                            <option value="reverse">Reverse </option>
+                                            <option value="sequential">Sequential </option>
+                                            <option value="unified">Unified </option>
+                                        </>
+                                    )}
                                 </select>
                             </div>
+                        </div>
+
+                        <div style={{ display: 'flex', gap: '1rem' }}>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Purpose</label>
-                                <select name="purpose" value={formData.purpose} onChange={handleChange} style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
+                                <select name="purpose" value={formData.purpose} onChange={handlePurposeChange} style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }}>
                                     <option value="OTP">OTP (One Time Password)</option>
                                     <option value="AUTHENTICATION">Authentication</option>
+                                    <option value="REGISTRATION">Registration</option>
+                                    <option value="VERIFICATION">Verification</option>
                                     <option value="PAYMENT GATEWAY">Payment Gateway</option>
+                                    <option value="COMPLAINT">Complaint</option>
                                 </select>
                             </div>
-                        </div>
-
-                        <div style={{ display: 'flex', gap: '1rem' }}>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Target User / Requestor ID</label>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Target User ID</label>
                                 <input type="text" name="user_id" value={formData.user_id} onChange={handleChange} style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
                             </div>
-                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                                <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Recipient Phone (Optional - Triggers SMS)</label>
-                                <input type="text" name="phone_number" placeholder="+1234567890" value={formData.phone_number} onChange={handleChange} style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
-                            </div>
                         </div>
 
                         <div style={{ display: 'flex', gap: '1rem' }}>
+                            <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                                <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Recipient Phone (SMS)</label>
+                                <input type="text" name="phone_number" placeholder="+1234567890" value={formData.phone_number} onChange={handleChange} style={{ padding: '0.75rem', borderRadius: '4px', border: '1px solid var(--border-color)' }} />
+                            </div>
                             <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
                                 <label style={{ fontSize: '0.85rem', fontWeight: 'bold' }}>Validity Requirement</label>
                                 <div style={{ display: 'flex', gap: '0.5rem' }}>
@@ -220,7 +328,7 @@ function IntegrationTestBed() {
                             fontWeight: 'bold',
                             cursor: loading ? 'not-allowed' : 'pointer'
                         }}>
-                            {loading ? 'Simulating API Call...' : 'Trigger token Generation'}
+                            {loading ? 'Simulating API Call...' : 'Trigger actual token Generation'}
                         </button>
                     </form>
 
@@ -232,10 +340,14 @@ function IntegrationTestBed() {
 
                     {/* JSON Payload Preview */}
                     <div style={{ background: '#1e1e1e', color: '#d4d4d4', padding: '1.5rem', borderRadius: 'var(--radius-md)', boxShadow: 'var(--shadow-md)' }}>
-                        <h3 style={{ marginTop: 0, marginBottom: '1rem', color: '#fff', fontSize: '1.1rem' }}>Outgoing API Request (JSON)</h3>
+                        <h3 style={{ marginTop: 0, marginBottom: '1rem', color: '#fff', fontSize: '1.1rem' }}>Integration Details</h3>
                         <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '1rem' }}>
-                            POST http://YOUR_SERVER_IP/api/generate-token
+                            Target Endpoint: POST http://YOUR_SERVER_IP/api/generate-token
                         </p>
+                        <p style={{ color: '#888', fontSize: '0.85rem', marginBottom: '1rem' }}>
+                            Environment: {selectedLanguage === 'python' ? 'Python / Flask Integration' : 'JavaScript / Node Integration'}
+                        </p>
+                        <h4 style={{ color: '#fff', fontSize: '1rem', marginTop: '1.5rem', marginBottom: '0.5rem' }}>Sample Payload Configuration</h4>
                         <pre style={{ margin: 0, whiteSpace: 'pre-wrap', fontFamily: 'monospace', fontSize: '0.9rem' }}>
                             {getSamplePayload()}
                         </pre>
@@ -272,4 +384,4 @@ function IntegrationTestBed() {
     );
 }
 
-export default IntegrationTestBed;
+export default ActualIntegration;

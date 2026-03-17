@@ -6,7 +6,7 @@ const CONFIG_FILE = path.join(__dirname, '../config/ipConfig.json');
 
 // Default configuration
 const DEFAULT_CONFIG = {
-    mode: 'BLACKLIST', // Options: 'BLACKLIST' (default allow), 'WHITELIST' (default deny)
+    mode: 'ALLOW_ALL', // Options: 'BLACKLIST' (default allow), 'WHITELIST' (default deny), 'ALLOW_ALL' (allow everyone)
     blacklist: [],     // IPs to block in BLACKLIST mode
     whitelist: []      // IPs to allow in WHITELIST mode
 };
@@ -40,7 +40,10 @@ const ipFilter = (req, res, next) => {
         // Skip check for localhost/loopback if needed, but usually we want to control everything
         // Note: ::1 is IPv6 loopback, 127.0.0.1 is IPv4
 
-        if (config.mode === 'WHITELIST') {
+        if (config.mode === 'ALLOW_ALL') {
+            // Allow all IPs
+            return next();
+        } else if (config.mode === 'WHITELIST') {
             // Default Deny: Allow only if in whitelist
             if (config.whitelist.includes(clientIp)) {
                 return next();

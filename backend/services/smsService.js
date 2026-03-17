@@ -17,9 +17,9 @@ const sendTokenToSMS = async (phoneNumber, token) => {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    recipient: phoneNumber,
-                    message: `Your requested token is: ${token}`,
-                    timestamp: new Date().toISOString()
+                    from: process.env.SMS_FROM_NUMBER || "0000000000", // Default sender number
+                    toList: [String(phoneNumber)], // Converts to an array of string(s)
+                    message: `Hello from the Token Generation System! Your OTP is ${token}.`
                 })
             });
 
